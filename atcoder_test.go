@@ -11,3 +11,9 @@ func TestLogin(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestInit(t *testing.T) {
+	a := New()
+	a.Login(os.Getenv("USERNAME"), os.Getenv("PASSWORD"))
+	a.Init("https://atcoder.jp/contests/abc126/tasks/abc126_a")
+}
