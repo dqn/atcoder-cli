@@ -22,39 +22,6 @@ type test struct {
 	output string
 }
 
-func dropUntil(s, until string) string {
-	begin := strings.Index(s, until)
-	if begin == -1 {
-		return ""
-	}
-	return s[begin+len(until):]
-}
-
-func parseContest(s string) (contest, probrem string) {
-	contest = dropUntil(s, "contests/")[:6]
-	probrem = strings.ToLower(dropUntil(s, "<title>")[0:1])
-	return
-}
-
-func parseSample(s string) string {
-	s = dropUntil(s, "<pre>")
-	return strings.TrimSpace(s[:strings.Index(s, "</pre>")])
-}
-
-func parseTests(s string) []*test {
-	tests := make([]*test, 0, 4)
-	for {
-		s = dropUntil(s, "Sample")
-		if s == "" {
-			return tests
-		}
-		input := parseSample(s)
-		s = dropUntil(s, "Sample")
-		output := parseSample(s)
-		tests = append(tests, &test{input, output})
-	}
-}
-
 func New() *AtCoderClient {
 	return &AtCoderClient{client: &http.Client{}}
 }
@@ -134,7 +101,7 @@ func (a *AtCoderClient) Init(url string) error {
 	}
 
 	s := string(body)
-	contest, probrem := parseContest(s)
+	contest, problem := parseContest(s)
 
 	dir := fmt.Sprintf("atcoder/%s", contest)
 	err = os.MkdirAll(dir, os.ModePerm)
@@ -142,9 +109,17 @@ func (a *AtCoderClient) Init(url string) error {
 		return err
 	}
 
-	println(contest, probrem)
-	// tests := parseTests(s)
+	tests := parseTests(s)
 
-	// fmt.Println(tests)
+	ch := make(chan error, 2)
+	go createTestFile(fmt.Sprintf("%s/%s.txt", dir, problem), tests, ch)
+	go createSourceFile(dir, ch)
+
+	for i := 0; i < 2; i++ {
+		if err = <-ch; err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
