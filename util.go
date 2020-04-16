@@ -38,7 +38,7 @@ func parseTests(s string) []*test {
 	}
 }
 
-func createTestFile(path string, tests []*test, ch chan error) {
+func createTestFile(path string, tests []*test) error {
 	cases := make([]string, 0, 6)
 	for _, v := range tests {
 		cases = append(cases, v.input+"\n\n"+v.output+"\n")
@@ -47,15 +47,18 @@ func createTestFile(path string, tests []*test, ch chan error) {
 
 	file, err := os.Create(path)
 	if err != nil {
-		ch <- err
-		return
+		return err
 	}
 	defer file.Close()
 
-	file.Write([]byte(s))
-	ch <- nil
+	_, err = file.Write([]byte(s))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func createSourceFile(dir string, ch chan error) {
-	ch <- nil
+func createSourceFile(dir string) error {
+	return nil
 }

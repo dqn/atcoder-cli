@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 )
 
 const baseURL = "https://atcoder.jp"
@@ -112,11 +113,23 @@ func (a *AtCoderClient) Init(url string) error {
 	tests := parseTests(s)
 
 	ch := make(chan error, 2)
-	go createTestFile(fmt.Sprintf("%s/%s.txt", dir, problem), tests, ch)
-	go createSourceFile(dir, ch)
+	go func() {
+		var wg sync.WaitGroup
+		wg.Add(cap(ch))
+		go func() {
+			ch <- createTestFile(fmt.Sprintf("%s/%s.txt", dir, problem), tests)
+			wg.Done()
+		}()
+		go func() {
+			ch <- createSourceFile(dir)
+			wg.Done()
+		}()
+		wg.Wait()
+		close(ch)
+	}()
 
-	for i := 0; i < 2; i++ {
-		if err = <-ch; err != nil {
+	for err := range ch {
+		if err != nil {
 			return err
 		}
 	}
