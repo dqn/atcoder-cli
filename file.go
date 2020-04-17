@@ -28,9 +28,9 @@ func createTestFile(path string, tests []*test) error {
 	return nil
 }
 
-func createSourceFile(dir, problem, templetePath string) error {
-	ext := templetePath[strings.LastIndex(templetePath, "."):]
-	src, err := os.OpenFile(templetePath, os.O_RDONLY, os.ModePerm)
+func createSourceFile(dir, problem, templatePath string) error {
+	ext := templatePath[strings.LastIndex(templatePath, "."):]
+	src, err := os.OpenFile(templatePath, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return err
 	}

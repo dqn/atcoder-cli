@@ -7,6 +7,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 )
@@ -19,10 +20,18 @@ type AtCoderClient struct {
 	csrfToken string
 }
 
+type Command struct {
+	Name string   `yaml:"name"`
+	Args []string `yaml:"args"`
+}
+
 type Config struct {
-	TempletePath string `yaml:"templete_path"`
-	Username     string `yaml:"username"`
-	Password     string `yaml:"password"`
+	Username     string    `yaml:"username"`
+	Password     string    `yaml:"password"`
+	TemplatePath string    `yaml:"template_path"`
+	Test         Command   `yaml:"command"`
+	Pretest      []Command `yaml:"pretest"`
+	Posttest     []Command `yaml:"posttest"`
 }
 
 type test struct {
@@ -131,8 +140,8 @@ func (a *AtCoderClient) Init(url string) error {
 			wg.Done()
 		}()
 		go func() {
-			templetePath := a.config.TempletePath
-			ch <- createSourceFile(dir, problem, templetePath)
+			templatePath := a.config.TemplatePath
+			ch <- createSourceFile(dir, problem, templatePath)
 			wg.Done()
 		}()
 		wg.Wait()
@@ -146,4 +155,28 @@ func (a *AtCoderClient) Init(url string) error {
 	}
 
 	return nil
+}
+
+func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
+	replacements := []*replacement{
+		{
+			regexp.MustCompile(`{{\s*file_path\s*}}`),
+			fmt.Sprintf("./atcoder/%s/%s.cpp", contest, problem),
+		},
+	}
+
+	for _, v := range a.config.Pretest {
+		if err := executeCommand(v, replacements); err != nil {
+			return false, err
+		}
+	}
+	if err := executeCommand(a.config.Test, replacements); err != nil {
+		return false, err
+	}
+	for _, v := range a.config.Posttest {
+		if err := executeCommand(v, replacements); err != nil {
+			return false, err
+		}
+	}
+	return true, nil
 }
