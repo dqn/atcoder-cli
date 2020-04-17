@@ -14,8 +14,15 @@ import (
 const baseURL = "https://atcoder.jp"
 
 type AtCoderClient struct {
+	config    *Config
 	client    *http.Client
 	csrfToken string
+}
+
+type Config struct {
+	TempletePath string `yaml:"templete_path"`
+	Username     string `yaml:"username"`
+	Password     string `yaml:"password"`
 }
 
 type test struct {
@@ -23,8 +30,11 @@ type test struct {
 	output string
 }
 
-func New() *AtCoderClient {
-	return &AtCoderClient{client: &http.Client{}}
+func New(config *Config) *AtCoderClient {
+	return &AtCoderClient{
+		client: &http.Client{},
+		config: config,
+	}
 }
 
 func (a *AtCoderClient) newRequest(method, path string) (*http.Request, error) {
@@ -59,7 +69,7 @@ func (a *AtCoderClient) getCSRFToken() (string, error) {
 	return string(b), nil
 }
 
-func (a *AtCoderClient) Login(username, password string) error {
+func (a *AtCoderClient) Login() error {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return err
@@ -74,8 +84,8 @@ func (a *AtCoderClient) Login(username, password string) error {
 	resp, err := a.client.PostForm(
 		fmt.Sprintf("%s/login", baseURL),
 		url.Values{
-			"username":   {username},
-			"password":   {password},
+			"username":   {a.config.Username},
+			"password":   {a.config.Password},
 			"csrf_token": {csrfToken},
 		},
 	)
@@ -121,7 +131,7 @@ func (a *AtCoderClient) Init(url string) error {
 			wg.Done()
 		}()
 		go func() {
-			templetePath := "./test/templete.cpp" // TODO
+			templetePath := a.config.TempletePath
 			ch <- createSourceFile(dir, problem, templetePath)
 			wg.Done()
 		}()
