@@ -1,6 +1,8 @@
 package atcoder
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"strings"
 )
@@ -59,6 +61,25 @@ func createTestFile(path string, tests []*test) error {
 	return nil
 }
 
-func createSourceFile(dir string) error {
+func createSourceFile(dir, problem, templetePath string) error {
+	ext := templetePath[strings.LastIndex(templetePath, "."):]
+	src, err := os.OpenFile(templetePath, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dstPath := fmt.Sprintf("%s/%s%s", dir, problem, ext)
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -121,7 +121,8 @@ func (a *AtCoderClient) Init(url string) error {
 			wg.Done()
 		}()
 		go func() {
-			ch <- createSourceFile(dir)
+			templetePath := "./test/templete.cpp" // TODO
+			ch <- createSourceFile(dir, problem, templetePath)
 			wg.Done()
 		}()
 		wg.Wait()
