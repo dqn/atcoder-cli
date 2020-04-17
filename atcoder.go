@@ -29,7 +29,7 @@ type Config struct {
 	Username     string    `yaml:"username"`
 	Password     string    `yaml:"password"`
 	TemplatePath string    `yaml:"template_path"`
-	Test         Command   `yaml:"command"`
+	Test         Command   `yaml:"test"`
 	Pretest      []Command `yaml:"pretest"`
 	Posttest     []Command `yaml:"posttest"`
 }
@@ -161,7 +161,7 @@ func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 	replacements := []*replacement{
 		{
 			regexp.MustCompile(`{{\s*file_path\s*}}`),
-			fmt.Sprintf("./atcoder/%s/%s.cpp", contest, problem),
+			[]byte(fmt.Sprintf("./atcoder/%s/%s.cpp", contest, problem)),
 		},
 	}
 

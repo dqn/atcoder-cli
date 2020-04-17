@@ -7,14 +7,30 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const atcoderrc string = `username: dqn
+const atcoderrc string = `
+username: dqn
 password: ''
-templete_path: './test/templete.cpp'
+template_path: ./test/template.cpp
+test:
+  name: ./a.out
+  args:
+pretest:
+  - name: g++
+    args:
+      - -Wall
+      - -std=c++14
+      - '{{ file_path }}'
+posttest:
+  - name: rm
+    args:
+      - ./a.out
 `
 
 func loadConfig() *Config {
 	var c Config
-	yaml.Unmarshal([]byte(atcoderrc), &c)
+	if err := yaml.Unmarshal([]byte(atcoderrc), &c); err != nil {
+		panic(err)
+	}
 	c.Password = os.Getenv("PASSWORD")
 	return &c
 }
@@ -32,5 +48,19 @@ func TestInit(t *testing.T) {
 	url := "https://atcoder.jp/contests/abc126/tasks/abc126_a"
 	if err := a.Init(url); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestTest(t *testing.T) {
+	a := New(loadConfig())
+	a.Login()
+	url := "https://atcoder.jp/contests/abc126/tasks/abc126_a"
+	a.Init(url)
+	ok, err := a.Test("abc126", "a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Fatal("test failed")
 	}
 }
