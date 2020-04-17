@@ -3,6 +3,7 @@ package atcoder
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -49,4 +50,26 @@ func createSourceFile(dir, problem, templatePath string) error {
 	}
 
 	return nil
+}
+
+func readTests(path string) ([]*test, error) {
+	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+	cases := strings.Split(string(b), "\n---\n")
+	tests := make([]*test, len(cases))
+
+	for i, v := range cases {
+		samples := strings.Split(v, "\n\n")
+		tests[i] = &test{
+			input:  strings.TrimSpace(samples[0]),
+			output: strings.TrimSpace(samples[1]),
+		}
+	}
+	return tests, nil
 }

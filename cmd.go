@@ -1,7 +1,7 @@
 package atcoder
 
 import (
-	"fmt"
+	"io"
 	"os/exec"
 	"regexp"
 )
@@ -19,13 +19,29 @@ func applyReplacement(s string, replacements []*replacement) string {
 	return string(b)
 }
 
-func executeCommand(command Command, replacements []*replacement) error {
+func execCommand(command Command, replacements []*replacement) *exec.Cmd {
 	name := applyReplacement(command.Name, replacements)
 	args := make([]string, len(command.Args))
 	for i, v := range command.Args {
 		args[i] = applyReplacement(v, replacements)
 	}
-	out, err := exec.Command(name, args...).Output()
-	fmt.Print(string(out))
-	return err
+	return exec.Command(name, args...)
+}
+
+func execCommandWithStdin(command Command, replacements []*replacement, input string) (*exec.Cmd, error) {
+	cmd := execCommand(command, replacements)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = io.WriteString(stdin, input)
+	if err != nil {
+		return nil, err
+	}
+	err = stdin.Close()
+	if err != nil {
+		return nil, err
+	}
+	return cmd, nil
 }

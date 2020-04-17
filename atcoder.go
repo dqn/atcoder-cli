@@ -158,23 +158,46 @@ func (a *AtCoderClient) Init(url string) error {
 }
 
 func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
+	path := fmt.Sprintf("./atcoder/%s/%s", contest, problem)
+	ext := ".cpp" // TODO
 	replacements := []*replacement{
 		{
 			regexp.MustCompile(`{{\s*file_path\s*}}`),
-			[]byte(fmt.Sprintf("./atcoder/%s/%s.cpp", contest, problem)),
+			[]byte(path + ext),
 		},
 	}
 
+	tests, err := readTests(path + ".txt")
+	if err != nil {
+		return false, err
+	}
+
 	for _, v := range a.config.Pretest {
-		if err := executeCommand(v, replacements); err != nil {
+		if _, err := execCommand(v, replacements).Output(); err != nil {
 			return false, err
 		}
 	}
-	if err := executeCommand(a.config.Test, replacements); err != nil {
-		return false, err
+
+	for _, v := range tests {
+		cmd, err := execCommandWithStdin(a.config.Test, replacements, v.input)
+		if err != nil {
+			return false, err
+		}
+
+		b, err := cmd.Output()
+		if err != nil {
+			return false, err
+		}
+
+		ans := strings.TrimSpace(string(b))
+		if ans != v.output {
+			println(ans, v.output)
+			return false, nil
+		}
 	}
+
 	for _, v := range a.config.Posttest {
-		if err := executeCommand(v, replacements); err != nil {
+		if _, err := execCommand(v, replacements).Output(); err != nil {
 			return false, err
 		}
 	}
