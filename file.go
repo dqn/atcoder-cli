@@ -1,7 +1,6 @@
 package atcoder
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -44,12 +43,6 @@ func createTestFile(path string, tests []*test) error {
 	}
 
 	return nil
-}
-
-func createSourceFile(dir, problem, templatePath string) error {
-	ext := templatePath[strings.LastIndex(templatePath, "."):]
-	dstPath := fmt.Sprintf("%s/%s%s", dir, problem, ext)
-	return copyFile(templatePath, dstPath)
 }
 
 func readTests(path string) ([]*test, error) {

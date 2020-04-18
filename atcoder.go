@@ -29,6 +29,7 @@ type Config struct {
 	Username     string    `yaml:"username"`
 	Password     string    `yaml:"password"`
 	TemplatePath string    `yaml:"template_path"`
+	Extension    string    `yaml:"extension"`
 	Test         Command   `yaml:"test"`
 	Pretest      []Command `yaml:"pretest"`
 	Posttest     []Command `yaml:"posttest"`
@@ -140,8 +141,8 @@ func (a *AtCoderClient) Init(url string) error {
 			wg.Done()
 		}()
 		go func() {
-			templatePath := a.config.TemplatePath
-			ch <- createSourceFile(dir, problem, templatePath)
+			dstPath := fmt.Sprintf("%s/%s%s", dir, problem, a.config.Extension)
+			ch <- copyFile(a.config.TemplatePath, dstPath)
 			wg.Done()
 		}()
 		wg.Wait()
@@ -159,11 +160,10 @@ func (a *AtCoderClient) Init(url string) error {
 
 func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 	path := fmt.Sprintf("./atcoder/%s/%s", contest, problem)
-	ext := ".cpp" // TODO
 	replacements := []*replacement{
 		{
 			regexp.MustCompile(`{{\s*file_path\s*}}`),
-			[]byte(path + ext),
+			[]byte(path + a.config.Extension),
 		},
 	}
 

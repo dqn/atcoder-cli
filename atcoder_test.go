@@ -11,6 +11,7 @@ const atcoderrc string = `
 username: dqn
 password: ''
 template_path: ./test/template.cpp
+extension: .cpp
 test:
   name: ./a.out
   args:
