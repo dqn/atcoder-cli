@@ -56,6 +56,7 @@ func TestTest(t *testing.T) {
 	a.Login()
 	url := "https://atcoder.jp/contests/abc126/tasks/abc126_a"
 	a.Init(url)
+	copyFile("test/a.cpp", "atcoder/abc126/a.cpp")
 	ok, err := a.Test("abc126", "a")
 	if err != nil {
 		t.Fatal(err)

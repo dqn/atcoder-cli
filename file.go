@@ -8,6 +8,23 @@ import (
 	"strings"
 )
 
+func copyFile(srcPath, dstPath string) error {
+	src, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	return err
+}
+
 func createTestFile(path string, tests []*test) error {
 	cases := make([]string, 0, 6)
 	for _, v := range tests {
@@ -31,29 +48,12 @@ func createTestFile(path string, tests []*test) error {
 
 func createSourceFile(dir, problem, templatePath string) error {
 	ext := templatePath[strings.LastIndex(templatePath, "."):]
-	src, err := os.OpenFile(templatePath, os.O_RDONLY, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer src.Close()
-
 	dstPath := fmt.Sprintf("%s/%s%s", dir, problem, ext)
-	dst, err := os.Create(dstPath)
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
-
-	_, err = io.Copy(dst, src)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return copyFile(templatePath, dstPath)
 }
 
 func readTests(path string) ([]*test, error) {
-	file, err := os.OpenFile(path, os.O_RDONLY, os.ModePerm)
+	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
