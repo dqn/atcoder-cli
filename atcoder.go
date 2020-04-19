@@ -173,7 +173,8 @@ func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 	}
 
 	for _, v := range a.config.Pretest {
-		if _, err := execCommand(v, replacements).Output(); err != nil {
+		if b, err := execCommand(v, replacements).CombinedOutput(); err != nil {
+			fmt.Print(string(b))
 			return false, err
 		}
 	}
@@ -185,8 +186,9 @@ func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 			return false, err
 		}
 
-		b, err := cmd.Output()
+		b, err := cmd.CombinedOutput()
 		if err != nil {
+			fmt.Print(string(b))
 			return false, err
 		}
 
@@ -201,7 +203,8 @@ func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 	printDivider()
 
 	for _, v := range a.config.Posttest {
-		if _, err := execCommand(v, replacements).Output(); err != nil {
+		if b, err := execCommand(v, replacements).CombinedOutput(); err != nil {
+			fmt.Print(string(b))
 			return ok, err
 		}
 	}
