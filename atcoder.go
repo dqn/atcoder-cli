@@ -90,6 +90,7 @@ func (a *AtCoderClient) Login() error {
 	if err != nil {
 		return err
 	}
+	a.csrfToken = csrfToken
 
 	resp, err := a.client.PostForm(
 		fmt.Sprintf("%s/login", baseURL),
@@ -209,4 +210,30 @@ func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 		}
 	}
 	return ok, nil
+}
+
+func (a *AtCoderClient) Submit(contest, problem string) (bool, error) {
+	path := fmt.Sprintf("./atcoder/%s/%s%s", contest, problem, a.config.Extension)
+	sourceCode, err := readFileContent(path)
+	if err != nil {
+		return false, err
+	}
+	resp, err := a.client.PostForm(
+		fmt.Sprintf("%s/contests/%s/submit", baseURL, contest),
+		url.Values{
+			"data.TaskScreenName": {fmt.Sprintf("%s_%s", contest, problem)},
+			"data.LanguageId":     {"3003"},
+			"sourceCode":          {sourceCode},
+			"csrf_token":          {a.csrfToken},
+		},
+	)
+	if err != nil {
+		return false, err
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, err
+	}
+	fmt.Println(string(b))
+	return true, nil
 }

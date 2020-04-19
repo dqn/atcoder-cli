@@ -54,11 +54,17 @@ func TestInit(t *testing.T) {
 
 func TestTest(t *testing.T) {
 	a := New(loadConfig())
-	a.Login()
-	url := "https://atcoder.jp/contests/abc126/tasks/abc126_a"
-	a.Init(url)
 	copyFile("test/a.cpp", "atcoder/abc126/a.cpp")
 	_, err := a.Test("abc126", "a")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSubmit(t *testing.T) {
+	a := New(loadConfig())
+	a.Login()
+	_, err := a.Submit("abc126", "a")
 	if err != nil {
 		t.Fatal(err)
 	}

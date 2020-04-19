@@ -7,6 +7,18 @@ import (
 	"strings"
 )
 
+func readFileContent(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
 func copyFile(srcPath, dstPath string) error {
 	src, err := os.Open(srcPath)
 	if err != nil {
@@ -46,15 +58,11 @@ func createTestFile(path string, tests []*test) error {
 }
 
 func readTests(path string) ([]*test, error) {
-	file, err := os.Open(path)
+	content, err := readFileContent(path)
 	if err != nil {
 		return nil, err
 	}
-	b, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-	cases := strings.Split(string(b), "\n---\n")
+	cases := strings.Split(content, "\n---\n")
 	tests := make([]*test, len(cases))
 
 	for i, v := range cases {
