@@ -178,7 +178,8 @@ func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 		}
 	}
 
-	for _, v := range tests {
+	ok := true
+	for i, v := range tests {
 		cmd, err := execCommandWithStdin(a.config.Test, replacements, v.input)
 		if err != nil {
 			return false, err
@@ -190,16 +191,19 @@ func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 		}
 
 		ans := strings.TrimSpace(string(b))
-		if ans != v.output {
-			println(ans, v.output)
-			return false, nil
+		if ans == v.output {
+			printAC(i)
+		} else {
+			printWA(i, v.output, ans)
+			ok = false
 		}
 	}
+	printDivider()
 
 	for _, v := range a.config.Posttest {
 		if _, err := execCommand(v, replacements).Output(); err != nil {
-			return false, err
+			return ok, err
 		}
 	}
-	return true, nil
+	return ok, nil
 }
