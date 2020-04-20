@@ -2,6 +2,8 @@
 
 AtCoder CLI
 
+![](./docs/sample.gif)
+
 ## Installation
 
 ```bash
