@@ -47,15 +47,6 @@ func New(config *Config) *AtCoderClient {
 	}
 }
 
-func (a *AtCoderClient) newRequest(method, path string) (*http.Request, error) {
-	req, err := http.NewRequest("POST", baseURL, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.URL.Path = path
-	return req, nil
-}
-
 func (a *AtCoderClient) getCSRFToken() (string, error) {
 	resp, err := a.client.Get(fmt.Sprintf("%s/login", baseURL))
 	if err != nil {
@@ -234,7 +225,37 @@ func (a *AtCoderClient) Submit(contest, task string) (bool, error) {
 		return false, err
 	}
 
-	parseJudgeStatus(b)
+	sid := parseSubmissionId(b)
+	a.getSubmissionStatus(contest, sid)
 
 	return true, nil
+}
+
+func (a *AtCoderClient) getSubmissionStatus(contest, id string) (*submissionStatus, error) {
+	url := fmt.Sprintf("%s/contests/%s/submissions/me/status/json", baseURL, contest)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	query := req.URL.Query()
+	query.Add("reload", "true")
+	query.Add("sids[]", id)
+	req.URL.RawQuery = query.Encode()
+
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	status := parseSubmissionStatus(b)
+	// fmt.Println(string(b))
+	// fmt.Println(status)
+
+	return status, nil
 }

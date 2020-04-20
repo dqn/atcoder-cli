@@ -1,6 +1,15 @@
 package atcoder
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
+
+type submissionStatus struct {
+	Status   string
+	Interval uint
+	Score    string
+}
 
 func dropUntil(s, until string) string {
 	begin := strings.Index(s, until)
@@ -10,18 +19,24 @@ func dropUntil(s, until string) string {
 	return s[begin+len(until):]
 }
 
-func parseContest(s string) (contest, problem string) {
+func extractBetween(s, a, b string) string {
+	s = dropUntil(s, a)
+	return s[:strings.Index(s, b)]
+}
+
+func parseContest(b []byte) (contest, task string) {
+	s := string(b)
 	contest = dropUntil(s, "contests/")[:6]
-	problem = strings.ToLower(dropUntil(s, "<title>")[0:1])
+	task = strings.ToLower(extractBetween(s, "<title>", " "))
 	return
 }
 
 func parseSample(s string) string {
-	s = dropUntil(s, "<pre>")
-	return strings.TrimSpace(s[:strings.Index(s, "</pre>")])
+	return strings.TrimSpace(extractBetween(s, "<pre>", "</pre>"))
 }
 
-func parseTests(s string) []*test {
+func parseTests(b []byte) []*test {
+	s := string(b)
 	tests := make([]*test, 0, 6)
 	for {
 		s = dropUntil(s, "Sample")
@@ -33,4 +48,21 @@ func parseTests(s string) []*test {
 		output := parseSample(s)
 		tests = append(tests, &test{input, output})
 	}
+}
+
+func parseSubmissionId(b []byte) string {
+	return extractBetween(string(b), `data-id="`, `"`)
+}
+
+func parseSubmissionStatus(b []byte) *submissionStatus {
+	s := string(b)
+	status := extractBetween(s, `"\u003e`, `\u003c/span`)
+	score := extractBetween(s, `"Score":"`, `"`)
+
+	interval, err := strconv.Atoi(extractBetween(s, `"Interval":`, ","))
+	if err != nil {
+		interval = 0
+	}
+
+	return &submissionStatus{status, uint(interval), score}
 }
