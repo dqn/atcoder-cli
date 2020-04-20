@@ -236,7 +236,7 @@ func (a *AtCoderClient) WaitJudge(contest, id string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("\r%s        ", status.Status)
+		fmt.Printf("\r%-8s", status.Status)
 
 		if status.Interval == 0 {
 			break
