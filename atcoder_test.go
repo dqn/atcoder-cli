@@ -61,10 +61,11 @@ func TestTest(t *testing.T) {
 	}
 }
 
-func TestSubmit(t *testing.T) {
+func TestSubmitAndWaitJudge(t *testing.T) {
 	a := New(loadConfig())
 	a.Login()
-	_, err := a.Submit("abc126", "a")
+	id, _ := a.Submit("abc126", "a")
+	err := a.WaitJudge("abc126", id)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -203,11 +203,11 @@ func (a *AtCoderClient) Test(contest, task string) (bool, error) {
 	return ok, nil
 }
 
-func (a *AtCoderClient) Submit(contest, task string) (bool, error) {
+func (a *AtCoderClient) Submit(contest, task string) (string, error) {
 	path := fmt.Sprintf("./atcoder/%s/%s%s", contest, task, a.config.Extension)
 	sourceCode, err := readFileContent(path)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 	resp, err := a.client.PostForm(
 		fmt.Sprintf("%s/contests/%s/submit", baseURL, contest),
@@ -219,33 +219,33 @@ func (a *AtCoderClient) Submit(contest, task string) (bool, error) {
 		},
 	)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
-	sid := parseSubmissionId(b)
-	var status *submissionStatus
-	for {
-		status, err = a.getSubmissionStatus(contest, sid)
-		if err != nil {
-			return false, err
-		}
+	id := parseSubmissionId(b)
+	return id, nil
+}
 
+func (a *AtCoderClient) WaitJudge(contest, id string) error {
+	for {
+		status, err := a.getSubmissionStatus(contest, id)
+		if err != nil {
+			return err
+		}
 		fmt.Printf("\r%s        ", status.Status)
 
 		if status.Interval == 0 {
 			break
 		}
-
 		time.Sleep(time.Duration(status.Interval) * time.Millisecond)
 	}
 
 	fmt.Print("\n")
-
-	return true, nil
+	return nil
 }
 
 func (a *AtCoderClient) getSubmissionStatus(contest, id string) (*submissionStatus, error) {
