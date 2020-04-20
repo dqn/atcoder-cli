@@ -44,14 +44,14 @@ $ atcoder init <url>
 ### Test
 
 ```bash
-$ atcoder test <contest> <problem>
+$ atcoder test <contest> <task>
 # e.g. atcoder test abc126 a
 ```
 
 ### Submit
 
 ```bash
-$ atcoder submit <contest> <problem>
+$ atcoder submit <contest> <task>
 # e.g. atcoder submit abc126 a
 ```
 

@@ -117,13 +117,12 @@ func (a *AtCoderClient) Init(url string) error {
 		return err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	s := string(body)
-	contest, problem := parseContest(s)
+	contest, task := parseContest(b)
 
 	dir := fmt.Sprintf("atcoder/%s", contest)
 	err = os.MkdirAll(dir, os.ModePerm)
@@ -131,18 +130,18 @@ func (a *AtCoderClient) Init(url string) error {
 		return err
 	}
 
-	tests := parseTests(s)
+	tests := parseTests(b)
 
 	ch := make(chan error, 2)
 	go func() {
 		var wg sync.WaitGroup
 		wg.Add(cap(ch))
 		go func() {
-			ch <- createTestFile(fmt.Sprintf("%s/%s.txt", dir, problem), tests)
+			ch <- createTestFile(fmt.Sprintf("%s/%s.txt", dir, task), tests)
 			wg.Done()
 		}()
 		go func() {
-			dstPath := fmt.Sprintf("%s/%s%s", dir, problem, a.config.Extension)
+			dstPath := fmt.Sprintf("%s/%s%s", dir, task, a.config.Extension)
 			ch <- copyFile(a.config.TemplatePath, dstPath)
 			wg.Done()
 		}()
@@ -159,8 +158,8 @@ func (a *AtCoderClient) Init(url string) error {
 	return nil
 }
 
-func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
-	path := fmt.Sprintf("./atcoder/%s/%s", contest, problem)
+func (a *AtCoderClient) Test(contest, task string) (bool, error) {
+	path := fmt.Sprintf("./atcoder/%s/%s", contest, task)
 	replacements := []*replacement{
 		{
 			regexp.MustCompile(`{{\s*file_path\s*}}`),
@@ -212,8 +211,8 @@ func (a *AtCoderClient) Test(contest, problem string) (bool, error) {
 	return ok, nil
 }
 
-func (a *AtCoderClient) Submit(contest, problem string) (bool, error) {
-	path := fmt.Sprintf("./atcoder/%s/%s%s", contest, problem, a.config.Extension)
+func (a *AtCoderClient) Submit(contest, task string) (bool, error) {
+	path := fmt.Sprintf("./atcoder/%s/%s%s", contest, task, a.config.Extension)
 	sourceCode, err := readFileContent(path)
 	if err != nil {
 		return false, err
@@ -221,8 +220,8 @@ func (a *AtCoderClient) Submit(contest, problem string) (bool, error) {
 	resp, err := a.client.PostForm(
 		fmt.Sprintf("%s/contests/%s/submit", baseURL, contest),
 		url.Values{
-			"data.TaskScreenName": {fmt.Sprintf("%s_%s", contest, problem)},
-			"data.LanguageId":     {"3003"},
+			"data.TaskScreenName": {fmt.Sprintf("%s_%s", contest, task)},
+			"data.LanguageId":     {"3003"}, // TODO
 			"sourceCode":          {sourceCode},
 			"csrf_token":          {a.csrfToken},
 		},
@@ -234,6 +233,8 @@ func (a *AtCoderClient) Submit(contest, problem string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	fmt.Println(string(b))
+
+	parseJudgeStatus(b)
+
 	return true, nil
 }
