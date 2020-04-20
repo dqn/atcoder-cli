@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 )
 
 const baseURL = "https://atcoder.jp"
@@ -226,7 +227,23 @@ func (a *AtCoderClient) Submit(contest, task string) (bool, error) {
 	}
 
 	sid := parseSubmissionId(b)
-	a.getSubmissionStatus(contest, sid)
+	var status *submissionStatus
+	for {
+		status, err = a.getSubmissionStatus(contest, sid)
+		if err != nil {
+			return false, err
+		}
+
+		fmt.Printf("\r%s        ", status.Status)
+
+		if status.Interval == 0 {
+			break
+		}
+
+		time.Sleep(time.Duration(status.Interval) * time.Millisecond)
+	}
+
+	fmt.Print("\n")
 
 	return true, nil
 }
@@ -253,9 +270,5 @@ func (a *AtCoderClient) getSubmissionStatus(contest, id string) (*submissionStat
 		return nil, err
 	}
 
-	status := parseSubmissionStatus(b)
-	// fmt.Println(string(b))
-	// fmt.Println(status)
-
-	return status, nil
+	return parseSubmissionStatus(b), nil
 }
