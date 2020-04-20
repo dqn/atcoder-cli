@@ -58,7 +58,6 @@ func run() error {
 		case 3:
 			contest, task = flag.Arg(1), flag.Arg(2)
 		case 4:
-			println(flag.Arg(1), flag.Arg(2), flag.Arg(3))
 			switch {
 			case flag.Arg(1) == "-t":
 				contest, task = flag.Arg(2), flag.Arg(3)
