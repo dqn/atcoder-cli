@@ -1,6 +1,6 @@
 # AtCoder CLI
 
-[WIP] AtCoder CLI
+AtCoder CLI
 
 ## Installation
 
@@ -51,7 +51,7 @@ $ atcoder test <contest> <task>
 ### Submit
 
 ```bash
-$ atcoder submit <contest> <task>
+$ atcoder submit <contest> <task> [options]
 # e.g. atcoder submit abc126 a
 ```
 
