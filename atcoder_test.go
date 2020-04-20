@@ -10,7 +10,7 @@ import (
 const atcoderrc string = `
 username: dqn
 password: ''
-template_path: ./test/template.cpp
+template_path: ./test/template.cpp.sample
 extension: .cpp
 test:
   name: ./a.out
@@ -25,6 +25,19 @@ posttest:
   - name: rm
     args:
       - ./a.out
+`
+
+const acpp string = `
+#include <iostream>
+using namespace std;
+
+int main() {
+  int N, K;
+  string S;
+  cin >> N >> K >> S;
+  S[K - 1] = S[K - 1] + 'a' - 'A';
+  cout << S << endl;
+}
 `
 
 func loadConfig() *Config {
@@ -54,7 +67,9 @@ func TestInit(t *testing.T) {
 
 func TestTest(t *testing.T) {
 	a := New(loadConfig())
-	copyFile("test/a.cpp", "atcoder/abc126/a.cpp")
+	file, _ := os.Create("atcoder/abc126/a.cpp")
+	file.Write([]byte(acpp))
+	file.Close()
 	_, err := a.Test("abc126", "a")
 	if err != nil {
 		t.Fatal(err)
